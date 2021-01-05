@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <head>
-  <title>MBR</title>
-  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <title>M-Brojevi</title>
+  <link rel="shortcut icon" href="../static/favicon.ico">
   <style>
-  body  {
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    font-weight: 200;
-  }
+    body  {
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+      font-weight: 200;
+    }
     #root {
       display: flex;
       flex-direction: column;
@@ -27,20 +27,98 @@
     br {
       margin: 0.5rem;
     }
-    textarea {
+    input {
       padding: 0.5rem;
       font-weight: 100;
     }
     em {
       color: grey;
     }
+
+    .settings {
+      width: 6rem;
+      margin: 1rem;
+      position: absolute;
+      top: -0.75rem;
+      left: 10rem;
+    }
+    .settings-button {
+      background-color: #f0f0f0;
+      width: 100%;
+      display: flex;
+      border: none;
+      border-radius: 0;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .relpar {
+      position: relative;
+    }
+    #dropdown {
+      background: #f0f0f0;
+      font-size: 0.8rem;
+      transition: all 500ms;
+      overflow: hidden;
+    }
+    #dropdown div {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      margin: 0.5rem;
+    }
+    .dropdown-closed {
+      max-height: 0;
+    }
+    .dropdown-open {
+      max-height: 10rem;
+    }
+
+    #angle {
+      width: 0.5rem;
+      transition: transform 500ms;
+    }
+    .rotangle {
+      transform: rotate(-180deg);
+    }
+    .unrotangle {
+      transform: rotate(0deg);
+    }
+
+    #warn {
+      color: red;
+      font-weight: 500;
+      display: none;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .shown {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div id="root">
-    <input type="text" id="input" placeholder="Neki kod..." cols="60" rows="5"></textarea>
+    <div class="relpar">
+      <input type="text" id="input" placeholder="Neki kod..." cols="60" rows="5"></input>
+      <div class="settings">
+        <button class="settings-button" onclick="changedropdown()">Opcije <img id="angle" src="../static/angle-down-solid.svg" /></button>
+        <div class="dropdown-closed" id="dropdown">
+          <div>
+            <span>Prvo slovo:</span>
+            <select name="fls" id="first-letter" onchange="changedselect(this)"></select>
+          </div>
+          <div>
+            <span>Zadnje slovo:</span>
+            <select name="lls" id="last-letter" onchange="changedselect(this)"></select>
+          </div>
+          <div id="warn" class="hidden">Zadnje slovo mora biti strogo nakon prvog!</div>
+        </div>
+      </div>
+    </div>
       <br />
-    <button onClick="submit()">Predaj</button>
+    <button id="sbm" onClick="submit()">Predaj</button>
     <br /><br /><br />
     <br /><br /><br />
     <div>Rezultat:</div>
@@ -49,13 +127,30 @@
   </div>
 
   <script>
-    // ove var mogu otic papa
-    const list = ['a', 'b', 'c', 'd']
-    let i = 0
+    const alphabet_first = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y']
+    const alphabet_last = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+
+    window.onload = (e) => {
+      let el1 = document.getElementById("first-letter")
+      for(let c of alphabet_first) {
+        let opt1 = document.createElement('option');
+        opt1.appendChild( document.createTextNode(c) );
+        opt1.value = c; 
+        el1.appendChild(opt1)
+      }
+
+      let el2 = document.getElementById("last-letter")
+      for(let c of alphabet_last) {
+        let opt2 = document.createElement('option');
+        opt2.appendChild( document.createTextNode(c) );
+        opt2.value = c; 
+        el2.appendChild(opt2)
+      }
+    }
+
     function submit() {
       fetch('/input', {
         method: 'POST',
-        //mode: 'same-origin', // fuck knows ne kuzim se u to glhf
         body: document.getElementById("input").value,
         headers: {
           'Content-Type': 'text'
@@ -69,6 +164,44 @@
       }).then(data => {
         document.getElementById("result").innerHTML = data.result
       })
+    }
+    let dropdownopen = false;
+    function changedropdown() {
+      let el = document.getElementById("dropdown")
+      let angle = document.getElementById("angle")
+      if(dropdownopen) {
+        el.classList.remove("dropdown-open")
+        el.classList.add("dropdown-closed")
+        angle.classList.remove("rotangle")
+        angle.classList.add("unrotangle")
+      } else {
+        el.classList.remove("dropdown-closed")
+        el.classList.add("dropdown-open")
+        angle.classList.add("rotangle")
+        angle.classList.remove("unrotangle")
+      }
+      dropdownopen = !dropdownopen
+    }
+    
+    const chosen = {
+      'first-letter': 'a',
+      'last-letter': 'b',
+    }
+    function changedselect(select_element) {
+      chosen[select_element.id] = select_element.options[select_element.selectedIndex].value
+      let warn = document.getElementById("warn")
+      if(chosen['first-letter'] >= chosen['last-letter']) {
+        // ovdje je krivo odabrano
+        warn.classList.remove("hidden")
+        warn.classList.add("shown")
+        document.getElementById("sbm").disabled = true
+      } else {
+        warn.classList.remove("shown")
+        warn.classList.add("hidden")
+        document.getElementById("sbm").disabled = false
+
+        // ovdje ide automatsko slanje `chosen` na backend na dobru promjenu either first or last
+      }
     }
   </script>
 </body>
