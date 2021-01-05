@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<head>
+  <title>MBR</title>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <style>
+  body  {
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: 200;
+  }
+    #root {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background: white;
+      border-radius: 0.1rem;
+      border: 0.05rem solid grey;
+    }
+    button:hover {
+      background: #dddddd;
+    }
+    button:active {
+      background: #bbbbbb;
+    }
+    br {
+      margin: 0.5rem;
+    }
+    textarea {
+      padding: 0.5rem;
+      font-weight: 100;
+    }
+    em {
+      color: grey;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <input type="text" id="input" placeholder="Neki kod..." cols="60" rows="5"></textarea>
+      <br />
+    <button onClick="submit()">Predaj</button>
+    <br /><br /><br />
+    <br /><br /><br />
+    <div>Rezultat:</div>
+    <br />
+    <div id="result"><em>Rezultat</em></div>
+  </div>
+
+  <script>
+    // ove var mogu otic papa
+    const list = ['a', 'b', 'c', 'd']
+    let i = 0
+    function submit() {
+      fetch('/input', {
+        method: 'POST',
+        //mode: 'same-origin', // fuck knows ne kuzim se u to glhf
+        body: document.getElementById("input").value,
+        headers: {
+          'Content-Type': 'text'
+        }
+      }).then(response => {
+        if(response.ok) {
+          return response.json()
+        } else {
+          console.log("Issue")
+        }
+      }).then(data => {
+        document.getElementById("result").innerHTML = data.result
+      })
+    }
+  </script>
+</body>
