@@ -6,15 +6,15 @@ GRAMMAR_PROTO = """start: expression
 ?expression: MBR | {productions}
 _monoarg{{x}}: x "(" expression ")"
 _biarg{{x}}: x "(" expression "," expression ")"
-MBR: {mbr} | NUMBER
-%import common.NUMBER
+MBR: {mbr} | SIGNED_NUMBER
+%import common.SIGNED_NUMBER
 %ignore " "
 """
 MBR_PROTO = 'abc'
 
 def get_transformer_productions(transformer):
     for method_name, method in inspect.getmembers(transformer, inspect.ismethod):
-        if "_" not in method_name and method_name != 'transform':
+        if method_name[0] != '_' and method_name != 'transform':
             param_len = len(inspect.signature(method).parameters)
             if param_len == 1:
                 yield method_name, True
@@ -40,7 +40,7 @@ class MBRParser():
 
 
     def set_alphabet(self, alphabet):
-        self.transformer.set_alphabet(alphabet)
+        self.transformer._set_alphabet(alphabet)
         productions = generate_productions_from(self.transformer)
         mbr = mbr_from_alphabet(alphabet)
         grammar = GRAMMAR_PROTO.format(productions=productions, mbr=mbr)
@@ -50,7 +50,7 @@ class MBRParser():
 
 @v_args(inline=True)
 class MBRTransformer(Transformer):
-    def set_alphabet(self, alphabet):
+    def _set_alphabet(self, alphabet):
         self.alphabet = alphabet
         self.val = {t: i for i, t in enumerate(alphabet)}
         return
@@ -69,10 +69,10 @@ class MBRTransformer(Transformer):
     def len(self, x):
         return sum((-1)**(i+1) * self.delta(x[i], x[i+1]) for i in range(len(x) - 1))
 
-    def lens(self, x):
+    def len_s(self, x):
         return (self.len(x) - self.defect(x))/2
 
-    def lenp(self, x):
+    def len_p(self, x):
         return (self.len(x) - self.defect(x))/2
 
     def alpha(self):
@@ -87,10 +87,10 @@ class MBRTransformer(Transformer):
     def right(self, x):
         return x[-1]
 
-    def leftd(self, x):
+    def left_d(self, x):
         return self._dual(self.left(x))
 
-    def rightd(self, x):
+    def right_d(self, x):
         return self._dual(self.right(x))
 
     def zip(self, x):
@@ -137,7 +137,7 @@ class MBRTransformer(Transformer):
         return self.left(x)+x+self.right(x)
 
     def k(self, x):
-        return self.leftd(x) + x + self.rightd(x)
+        return self.left_d(x) + x + self.right_d(x)
 
     def f(self, x):
         return self.d(self.e(x))
@@ -146,51 +146,51 @@ class MBRTransformer(Transformer):
         return self.right(x) + x + self.left(x)
 
     def h(self, x):
-        return self.rightd(x) + x + self.leftd(x)
+        return self.right_d(x) + x + self.left_d(x)
 
     def io(self, x):
         return self.e(self.g(x))
 
-    def js(self, x):
+    def j_s(self, x):
         return self.omega() + self.alpha() + x + self.omega() + self.alpha()
 
-    def jp(self, x):
+    def j_p(self, x):
         return self.alpha() + self.omega() + x + self.alpha() + self.omega()
 
-    def qs(self, x):
+    def q_s(self, x):
         self.left(x) + min(self.left(x), self.right(x)) + max(self.left(x), self.right(x)) + self.right(x)
 
-    def qp(self, x):
+    def q_p(self, x):
         self.left(x) + max(self.left(x), self.right(x)) + min(self.left(x), self.right(x)) + self.right(x)
 
-    #def is(self, x):
-    #    if self.left(x)<=self.right(x):
-    #        return self.left(x)+x+self.right(x)+self.left(x)*2 + self.right(x)*2
-    #    else:
-    #        return self.left(x)+self.right(x)*2+x+self.right(x)
+    def i_s(self, x):
+        if self.left(x)<=self.right(x):
+            return self.left(x)+x+self.right(x)+self.left(x)*2 + self.right(x)*2
+        else:
+            return self.left(x)+self.right(x)*2+x+self.right(x)
 
-    def ip(self, x):
+    def i_p(self, x):
         if self.left(x)<=self.right(x):
             return self.left(x)+self.right(x)*2+x+self.right(x)
         else:
             return self.left(x)+x+self.right(x)+self.left(x)*2+self.right(x)*2
 
-    def es(self, x):
+    def e_s(self, x):
         return self.g(self.i(x)) if self.left(x) <= self.right(x) else self.i(self.g(x))
 
-    def ep(self, x):
+    def e_p(self, x):
         return self.i(self.g(x)) if self.left(x) <= self.right(x) else self.g(self.i(x)) 
 
-    def ds(self, x):
-        return self.d(self.e(self.es(x)))
+    def d_s(self, x):
+        return self.d(self.e(self.e_s(x)))
 
-    def dp(self, x):
-        return self.d(self.e(self.ep(x)))
+    def d_p(self, x):
+        return self.d(self.e(self.e_p(x)))
 
-    def ks(self, x):
+    def k_s(self, x):
         return self.omega() + x + self.omega()
 
-    def kp(self, x):
+    def k_p(self, x):
         return self.alpha() + x + self.alpha()
 
     def ps(self, x, y):
@@ -200,32 +200,31 @@ class MBRTransformer(Transformer):
         return min(self.left(x), self.left(y))*2 + x + max(self.right(x), self.left(y)) + min(self.right(x), self.left(y)) + y + max(self.right(x), self.right(y))*2
 
     def po(self, x, y):
-        return self.ps(x, self.ip(y)) 
+        return self.ps(x, self.i_p(y)) 
 
     def pm(self, x, n, rez=''):
-        print('x', x), print('n', n)
         n = int(n)
         rez = x if rez == "" else rez
         if n in [1, -1]:
             return rez
         elif n < 0:
-            rez = self.ps(rez, self.ip(x))
+            rez = self.ps(rez, self.i_p(x))
             return self.pm(x, n+1, rez)
         else:
             rez = self.ps(rez, x)
             return self.pm(x, n-1, rez)
 
-    #def sm(self, x, n, rez=''):
-    #    n = int(n)
-    #    rez = x if rez == '' else rez
-    #    if n in [-1, 1]:
-    #        return rez
-    #    elif n < 0:
-    #        rez = self.ss(rez, self.is(x))
-    #        return self.sm(n+1, x, rez)
-    #    else:
-    #        rez = self.ss(rez, x)
-    #        return self.sm(n-1, x, rez)
+    def sm(self, x, n, rez=''):
+        n = int(n)
+        rez = x if rez == '' else rez
+        if n in [-1, 1]:
+            return rez
+        elif n < 0:
+            rez = self.ss(rez, self.i_s(x))
+            return self.sm(x, n+1, rez)
+        else:
+            rez = self.ss(rez, x)
+            return self.sm(x, n-1, rez)
 
     def si(self, x, y):
         return self.ss(self.k(x), y)
