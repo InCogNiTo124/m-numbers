@@ -12,18 +12,6 @@
       flex-direction: column;
       align-items: center;
     }
-    button {
-      padding: 0.5rem 1rem;
-      background: white;
-      border-radius: 0.1rem;
-      border: 0.05rem solid grey;
-    }
-    button:hover {
-      background: #dddddd;
-    }
-    button:active {
-      background: #bbbbbb;
-    }
     br {
       margin: 0.5rem;
     }
@@ -35,14 +23,20 @@
       color: grey;
     }
 
-    .settings {
-      width: 6rem;
-      margin: 1rem;
-      position: absolute;
-      top: -0.75rem;
-      left: 10rem;
+    .btn {
+      padding: 0.5rem 1rem;
+      background: white;
+      border-radius: 0.1rem;
+      border: 0.05rem solid grey;
     }
-    .settings-button {
+    .btn:hover {
+      background: #dddddd;
+    }
+    .btn:active {
+      background: #bbbbbb;
+    }
+
+    .dropdown-btn {
       background-color: #f0f0f0;
       width: 100%;
       display: flex;
@@ -50,28 +44,50 @@
       border-radius: 0;
       justify-content: space-between;
       align-items: center;
+      cursor: pointer;
+    }
+    .settings {
+      margin: 1rem;
+      position: absolute;
+      top: -0.75rem;
+      left: 16rem;
     }
 
     .relpar {
       position: relative;
+      width: 15rem;
     }
+
+    #input {
+      width: 100%;
+    }
+
     #dropdown {
       background: #f0f0f0;
       font-size: 0.8rem;
       transition: all 500ms;
       overflow: hidden;
     }
-    #dropdown div {
+
+    #dropdown .parent {
+      padding: 0.5rem;
+    }
+
+    .parent div {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      margin: 0.5rem;
+    }
+    
+    .parent br {
+      padding: 0;
+      margin: 0;
     }
     .dropdown-closed {
       max-height: 0;
     }
     .dropdown-open {
-      max-height: 10rem;
+      max-height: 12rem;
     }
 
     #angle {
@@ -88,13 +104,20 @@
     #warn {
       color: red;
       font-weight: 500;
-      display: none;
+      font-size: 0.75rem;
     }
     .hidden {
       display: none !important;
     }
     .shown {
-      display: block;
+      display: flex;
+    }
+
+    select {
+      cursor: pointer;
+    }
+    select option {
+      cursor: pointer;
     }
   </style>
 </head>
@@ -103,22 +126,26 @@
     <div class="relpar">
       <input type="text" id="input" placeholder="Neki kod..." cols="60" rows="5"></input>
       <div class="settings">
-        <button class="settings-button" onclick="changedropdown()">Opcije <img id="angle" src="../static/angle-down-solid.svg" /></button>
+        <button class="btn dropdown-btn" onclick="changedropdown()">Opcije <img id="angle" src="../static/angle-down-solid.svg" /></button>
         <div class="dropdown-closed" id="dropdown">
-          <div>
-            <span>Prvo slovo:</span>
-            <select name="fls" id="first-letter" onchange="changedselect(this)"></select>
+          <div class="parent">
+            <div>
+              <span>Prvo slovo:</span>
+              <select name="fls" id="first-letter" onchange="changedselect(this)"></select>
+            </div>
+            <div>
+              <span>Zadnje slovo:</span>
+              <select name="lls" id="last-letter" onchange="changedselect(this)"></select>
+            </div>
+            <div id="warn" class="hidden">Zadnje slovo mora biti strogo nakon prvog!</div>
+            <br />
+            <button class="btn btn-small" onclick="selectSubmit()">Primijeni</button>
           </div>
-          <div>
-            <span>Zadnje slovo:</span>
-            <select name="lls" id="last-letter" onchange="changedselect(this)"></select>
-          </div>
-          <div id="warn" class="hidden">Zadnje slovo mora biti strogo nakon prvog!</div>
         </div>
       </div>
     </div>
       <br />
-    <button id="sbm" onClick="submit()">Predaj</button>
+    <button class="btn" id="sbm" onClick="contentSubmit()">Predaj</button>
     <br /><br /><br />
     <br /><br /><br />
     <div>Rezultat:</div>
@@ -127,9 +154,12 @@
   </div>
 
   <script>
-    const alphabet_first = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y']
-    const alphabet_last = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-
+    
+    /*
+    ** Initialise the select elements for letters
+    */
+   const alphabet_first = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y']
+   const alphabet_last = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
     window.onload = (e) => {
       let el1 = document.getElementById("first-letter")
       for(let c of alphabet_first) {
@@ -148,7 +178,41 @@
       }
     }
 
-    function submit() {
+    /*
+    ** Handle changes and validation of letter options
+    */
+    const chosen = {
+      'first-letter': 'a',
+      'last-letter': 'b',
+    }
+    function changedselect(select_element) {
+      chosen[select_element.id] = select_element.options[select_element.selectedIndex].value
+      let warn = document.getElementById("warn")
+      if(chosen['first-letter'] >= chosen['last-letter']) {
+        // ovdje je krivo odabrano
+        warn.classList.remove("hidden")
+        warn.classList.add("shown")
+        console.log(warn)
+        document.getElementById("sbm").disabled = true
+      } else {
+        warn.classList.remove("shown")
+        warn.classList.add("hidden")
+        document.getElementById("sbm").disabled = false
+      }
+    }
+
+    /* 
+    ** Sends a request to the server with the selected letter data
+    */
+    function selectSubmit() {
+      // napisi si post here
+
+    }
+
+    /* 
+    ** Sends a request to the server with the content to be parsed
+    */
+    function contentSubmit() {
       fetch('/input', {
         method: 'POST',
         body: document.getElementById("input").value,
@@ -165,6 +229,10 @@
         document.getElementById("result").innerHTML = data.result
       })
     }
+
+    /*
+    ** Cosmetic dropdown opening and closing
+    */
     let dropdownopen = false;
     function changedropdown() {
       let el = document.getElementById("dropdown")
@@ -181,27 +249,6 @@
         angle.classList.remove("unrotangle")
       }
       dropdownopen = !dropdownopen
-    }
-    
-    const chosen = {
-      'first-letter': 'a',
-      'last-letter': 'b',
-    }
-    function changedselect(select_element) {
-      chosen[select_element.id] = select_element.options[select_element.selectedIndex].value
-      let warn = document.getElementById("warn")
-      if(chosen['first-letter'] >= chosen['last-letter']) {
-        // ovdje je krivo odabrano
-        warn.classList.remove("hidden")
-        warn.classList.add("shown")
-        document.getElementById("sbm").disabled = true
-      } else {
-        warn.classList.remove("shown")
-        warn.classList.add("hidden")
-        document.getElementById("sbm").disabled = false
-
-        // ovdje ide automatsko slanje `chosen` na backend na dobru promjenu either first or last
-      }
     }
   </script>
 </body>
