@@ -139,7 +139,7 @@
             </div>
             <div id="warn" class="hidden">Zadnje slovo mora biti strogo nakon prvog!</div>
             <br />
-            <button class="btn btn-small" onclick="selectSubmit()">Primijeni</button>
+            <button class="btn btn-small" id="ssbm" onclick="selectSubmit()">Primijeni</button>
           </div>
         </div>
       </div>
@@ -194,10 +194,12 @@
         warn.classList.add("shown")
         console.log(warn)
         document.getElementById("sbm").disabled = true
+        document.getElementById("ssbm").disabled = true
       } else {
         warn.classList.remove("shown")
         warn.classList.add("hidden")
         document.getElementById("sbm").disabled = false
+        document.getElementById("ssbm").disabled = false
       }
     }
 
