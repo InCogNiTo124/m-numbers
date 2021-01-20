@@ -168,7 +168,8 @@
         opt1.value = c; 
         el1.appendChild(opt1)
       }
-
+      el1.selectedIndex = alphabet_first.indexOf(chosen['first-letter'])
+      
       let el2 = document.getElementById("last-letter")
       for(let c of alphabet_last) {
         let opt2 = document.createElement('option');
@@ -176,6 +177,7 @@
         opt2.value = c; 
         el2.appendChild(opt2)
       }
+      el2.selectedIndex = alphabet_last.indexOf(chosen['last-letter'])
     }
 
     /*
