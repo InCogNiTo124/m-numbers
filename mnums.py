@@ -3,10 +3,10 @@ from lark import Lark, Token, Transformer, v_args
 import inspect
 
 GRAMMAR_PROTO = """start: expression
-?expression: MBR | {productions}
+?expression: {productions} | MBR
 _monoarg{{x}}: x "(" expression ")"
 _biarg{{x}}: x "(" expression "," expression ")"
-MBR: {mbr} | SIGNED_NUMBER
+MBR.0: {mbr} | SIGNED_NUMBER
 %import common.SIGNED_NUMBER
 %ignore " "
 """
@@ -34,18 +34,18 @@ class MBRParser():
         self.set_alphabet(alphabet)
         return
 
-    def parse(self, input_string):
-        parse_tree = self.parser.parse(input_string)
-        return parse_tree.children[0]
-
-
     def set_alphabet(self, alphabet):
         self.transformer._set_alphabet(alphabet)
         productions = generate_productions_from(self.transformer)
         mbr = mbr_from_alphabet(alphabet)
         grammar = GRAMMAR_PROTO.format(productions=productions, mbr=mbr)
-        print(grammar)
+        #print(grammar)
         self.parser = Lark(grammar, parser='lalr', transformer=self.transformer)
+        return
+
+    def parse(self, input_string):
+        parse_tree = self.parser.parse(input_string)
+        return parse_tree.children[0]
 
 
 @v_args(inline=True)
@@ -66,14 +66,14 @@ class MBRTransformer(Transformer):
     def defect(self, x):
         return self.val[self.right(x)] - self.val[self.left(x)]
 
-    def len(self, x):
-        return sum((-1)**(i+1) * self.delta(x[i], x[i+1]) for i in range(len(x) - 1))
-
     def len_s(self, x):
         return (self.len(x) - self.defect(x))/2
 
     def len_p(self, x):
-        return (self.len(x) - self.defect(x))/2
+        return (self.len(x) + self.defect(x))/2
+
+    def len(self, x):
+        return sum((-1)**(i+1) * self.delta(x[i], x[i+1]) for i in range(len(x) - 1))
 
     def alpha(self):
         return self.alphabet[0]
@@ -158,10 +158,10 @@ class MBRTransformer(Transformer):
         return self.alpha() + self.omega() + x + self.alpha() + self.omega()
 
     def q_s(self, x):
-        self.left(x) + min(self.left(x), self.right(x)) + max(self.left(x), self.right(x)) + self.right(x)
+        return self.left(x) + min(self.left(x), self.right(x)) + max(self.left(x), self.right(x)) + self.right(x)
 
     def q_p(self, x):
-        self.left(x) + max(self.left(x), self.right(x)) + min(self.left(x), self.right(x)) + self.right(x)
+        return self.left(x) + max(self.left(x), self.right(x)) + min(self.left(x), self.right(x)) + self.right(x)
 
     def i_s(self, x):
         if self.left(x)<=self.right(x):
@@ -201,6 +201,9 @@ class MBRTransformer(Transformer):
 
     def po(self, x, y):
         return self.ps(x, self.i_p(y)) 
+
+    def so(self, x, y):
+        return self.ss(x, self.i_s(y))
 
     def pm(self, x, n, rez=''):
         n = int(n)

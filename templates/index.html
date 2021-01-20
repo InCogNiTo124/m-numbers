@@ -4,7 +4,7 @@
   <link rel="shortcut icon" href="../static/favicon.ico">
   <style>
     body  {
-      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+      font-family: 'Gill Sans', 'Gill Sans MT', 'Calibri', 'Trebuchet MS', sans-serif;
       font-weight: 200;
     }
     #root {
@@ -183,7 +183,7 @@
     */
     const chosen = {
       'first-letter': 'a',
-      'last-letter': 'b',
+      'last-letter': 'c',
     }
     function changedselect(select_element) {
       chosen[select_element.id] = select_element.options[select_element.selectedIndex].value
@@ -209,7 +209,17 @@
     function selectSubmit() {
       changedropdown()
       // napisi si post here
-
+      fetch('/alphabet', {
+          method: 'POST',
+          body: JSON.stringify(chosen),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+      }).then(response => {
+        if(!response.ok) {
+            alert("There was a problem changing the alphabet");
+        }
+      })
     }
 
     /* 
@@ -226,7 +236,8 @@
         if(response.ok) {
           return response.json()
         } else {
-          console.log("Issue")
+          //console.log("Issue")
+            document.getElementById("result").innerHTML = "<div style='color:red;'>" + response.json().result + "</div>"
         }
       }).then(data => {
         document.getElementById("result").innerHTML = data.result
