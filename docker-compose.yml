@@ -1,0 +1,26 @@
+version: '3.7'
+services:
+  m-nums:
+    image: m-nums
+    container_name: m-nums
+    build:
+        dockerfile: Dockerfile
+        context: .
+    restart: always
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.m-nums.rule=Host(`m-nums.msmetko.xyz`)"
+        - "traefik.http.routers.m-nums.entrypoints=websecure"
+        - "traefik.http.routers.m-nums.tls=true"
+        - "traefik.http.routers.m-nums.tls.certresolver=le"
+        - "traefik.http.services.m-nums.loadbalancer.server.scheme=http"
+        - "traefik.http.services.m-nums.loadbalancer.server.port=1234"
+        - "traefik.docker.network=traefik_default"
+    ports:
+            - "1234:1234"
+    networks:
+        - traefik_default
+
+networks:
+    traefik_default:
+        external: true
