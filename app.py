@@ -9,6 +9,7 @@ app.secret_key = os.urandom(16)
 @app.route('/')
 def index():
     session['alphabet'] = 'abc'
+    #session['parser'] = MBRParser('abc', MBRTransformer()).__dict__
     return render_template('index.html')
 
 @app.route('/input', methods=['POST'])
@@ -24,6 +25,12 @@ def parse_input():
 
 @app.route('/alphabet', methods=['POST'])
 def change_alphabet():
-    print(request.json)
-    return ('', 200)
-
+    try:
+        alpha = request.json['first-letter']
+        omega = request.json['last-letter']
+        alphabet = "".join(map(chr, range(ord(alpha), ord(omega)+1)))
+        print(alphabet)
+        session['alphabet'] = alphabet
+        return ('', 200)
+    except:
+        return ('', 400)
