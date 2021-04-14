@@ -16,4 +16,4 @@ In short, a new type of mathematical structure is being investigated after an in
 
 Croatian language version is already available.
 
-For more info, see (https://www.fer.unizg.hr/en/course/mnu)[this page for contact information].
+For more info, see [this page for contact information](https://www.fer.unizg.hr/en/course/mnu).
