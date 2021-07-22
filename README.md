@@ -16,4 +16,6 @@ In short, a new type of mathematical structure is being investigated after an in
 
 Croatian language version is already available.
 
+English version can be found [overhere](https://amas.pmfst.unist.hr/ams/show_paper.php?id=61) after January 2022.
+
 For more info, see [this page for contact information](https://www.fer.unizg.hr/en/course/mnu).
