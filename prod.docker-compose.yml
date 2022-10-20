@@ -1,0 +1,19 @@
+services:
+  m-nums:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.m-nums.rule=Host(`m-nums.msmetko.xyz`)"
+      - "traefik.http.routers.m-nums.entrypoints=websecure"
+      - "traefik.http.routers.m-nums.tls=true"
+      - "traefik.http.routers.m-nums.tls.certresolver=le"
+      - "traefik.http.services.m-nums.loadbalancer.server.scheme=http"
+      - "traefik.http.services.m-nums.loadbalancer.server.port=1234"
+      - "traefik.docker.network=traefik_default"
+    expose:
+      - "1234"
+    networks:
+      - traefik_default
+
+networks:
+  traefik_default:
+    external: true
