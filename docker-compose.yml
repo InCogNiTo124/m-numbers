@@ -1,8 +1,4 @@
 services:
   m-nums:
-    image: m-nums
     container_name: m-nums
-    build:
-      dockerfile: Dockerfile
-      context: .
     restart: always
