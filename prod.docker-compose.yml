@@ -1,5 +1,6 @@
 services:
   m-nums:
+    image: ghcr.io/incognito124/m-numbers:latest
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.m-nums.rule=Host(`m-nums.msmetko.xyz`)"
@@ -17,3 +18,4 @@ services:
 networks:
   traefik_default:
     external: true
+    name: traefik_default
